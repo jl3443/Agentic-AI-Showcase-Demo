@@ -170,16 +170,16 @@ export function GovernanceSlide() {
       </div>
 
       {/* ── Lifecycle flow ── */}
-      <div className="relative mb-2 rounded-lg border-2 border-border bg-card/30 px-3 py-2">
+      <div className="relative mb-2 rounded-lg border border-border bg-card/30 px-3 py-2">
         <div className="flex items-center justify-center gap-1">
           {stages.map((s, i) => {
             const isHl = highlightStage === s.id
             return (
               <div key={s.id} className="flex items-center gap-1">
                 <div className={cn(
-                  "flex items-center gap-1.5 rounded-lg border-2 px-2 py-1.5 transition-all duration-400 max-w-[170px]",
+                  "flex items-center gap-1.5 rounded-lg border px-2 py-1.5 transition-all duration-400 max-w-[170px]",
                   isHl
-                    ? "border-primary bg-primary/10 shadow-[0_0_12px_rgba(var(--primary-rgb,34,139,34),0.15)]"
+                    ? "border-primary bg-primary/10"
                     : "border-border bg-card/50"
                 )}>
                   <span className={cn("shrink-0 transition-colors", isHl ? "text-primary" : "text-muted-foreground")}>{s.icon}</span>
@@ -215,7 +215,7 @@ export function GovernanceSlide() {
               key={c.id}
               onClick={() => setActiveCap(activeCap === c.id ? null : c.id)}
               className={cn(
-                "flex items-center gap-1.5 rounded-lg border-2 px-2 py-1 text-left transition-all",
+                "flex items-center gap-1.5 rounded-lg border px-2 py-1 text-left transition-all",
                 activeCap === c.id
                   ? "border-primary/50 bg-primary/10"
                   : "border-border bg-card/40 hover:bg-secondary/50"
@@ -231,7 +231,7 @@ export function GovernanceSlide() {
         </div>
 
         {/* Right: Detail panel */}
-        <div className="flex-1 rounded-lg border-2 border-border bg-card/30 overflow-hidden">
+        <div className="flex-1 rounded-lg border border-border bg-card/30 overflow-hidden">
           {cap ? (
             <div className="h-full flex flex-col p-3 overflow-y-auto animate-in fade-in slide-in-from-right-2 duration-300" key={cap.id}>
               {/* Header */}
@@ -293,7 +293,7 @@ export function GovernanceSlide() {
       </div>
 
       {/* ── Bottom message ── */}
-      <div className="mt-1.5 flex items-center justify-center gap-4 rounded-lg border-2 border-primary/20 bg-primary/5 py-2 px-4">
+      <div className="mt-1.5 flex items-center justify-center gap-4 rounded-lg border border-primary/20 bg-primary/5 py-2 px-4">
         <span className="text-xs text-foreground/60 font-medium">Autonomy without governance is a demo.</span>
         <span className="h-4 w-px bg-primary/20" />
         <span className="text-xs text-primary font-bold">Autonomy with governance is an enterprise system.</span>

@@ -51,9 +51,9 @@ const priorityStyle: Record<string, string> = {
 }
 
 export function UIAgentsSlide() {
-  const [nodeHighlight, setNodeHighlight] = useState<string | null>(null)
-  const [visibleCount, setVisibleCount] = useState(0)
-  const [step, setStep] = useState(-1)
+  const [nodeHighlight, setNodeHighlight] = useState<string | null>(uiNodes[0]?.id ?? null)
+  const [visibleCount, setVisibleCount] = useState(disciplines.length)
+  const [step, setStep] = useState(disciplines.length)
   const [autoRunning, setAutoRunning] = useState(false)
   const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -97,9 +97,8 @@ export function UIAgentsSlide() {
     setVisibleCount(step) // step 1 => 1 visible, step 7 => 7 visible
   }, [step])
 
-  // Node highlight cycling when diagram is shown
+  // Node highlight cycling
   useEffect(() => {
-    if (step < 0) { setNodeHighlight(null); return }
     const ids = uiNodes.map((n) => n.id)
     let s = 0
     const timer = setInterval(() => {
@@ -107,7 +106,7 @@ export function UIAgentsSlide() {
       setNodeHighlight(ids[s])
     }, 1800)
     return () => clearInterval(timer)
-  }, [step])
+  }, [])
 
   return (
     <div className="flex h-full flex-col px-5 pt-4 pb-3 md:px-8 md:pt-5">
@@ -128,10 +127,7 @@ export function UIAgentsSlide() {
       </div>
 
       {/* Top: workflow */}
-      <div className={cn(
-        "relative h-[38%] shrink-0 rounded-lg border border-border bg-card/40 overflow-hidden mb-2 transition-all duration-700",
-        step >= 0 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-      )}>
+      <div className="relative h-[38%] shrink-0 rounded-lg border border-border bg-card/40 overflow-hidden mb-2">
         <div className="absolute inset-0 dot-grid opacity-20" />
         <WorkflowDiagram
           nodes={uiNodes}
