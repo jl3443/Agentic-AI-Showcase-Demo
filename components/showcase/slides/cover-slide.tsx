@@ -34,7 +34,7 @@ export function CoverSlide() {
 
       {/* Top tag */}
       <div className={cn("flex items-center gap-2 shrink-0 transition-all duration-500", visible ? "opacity-100" : "opacity-0")}>
-        <span className="rounded-md border-2 border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-mono font-bold text-primary tracking-wide">
+        <span className="rounded-md border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-mono font-bold text-primary tracking-wide">
           KNOWLEDGE SHOWCASE
         </span>
         <span className="h-px flex-1 bg-border" />
@@ -59,7 +59,7 @@ export function CoverSlide() {
               <span className="text-foreground font-semibold">Few survive production.</span>
             </p>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-3">
+          <p className="text-xs text-muted-foreground leading-relaxed border-l border-primary/30 pl-3">
             A systematic look at the architecture, patterns, and governance that turn an AI demo into a reliable enterprise system.
           </p>
         </div>
@@ -70,7 +70,7 @@ export function CoverSlide() {
           visible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
         )}>
           {/* Demo Agent */}
-          <div className="rounded-xl border-2 border-red-200 bg-red-50/50 p-4 flex flex-col">
+          <div className="rounded-xl border border-red-200 bg-red-50/50 p-4 flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
               <span className="text-xs font-bold text-red-500 font-mono tracking-wide">DEMO AGENT</span>
@@ -93,7 +93,7 @@ export function CoverSlide() {
           </div>
 
           {/* Production System */}
-          <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4 flex flex-col">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
               <span className="text-xs font-bold text-emerald-600 font-mono tracking-wide">PRODUCTION SYSTEM</span>
@@ -119,14 +119,14 @@ export function CoverSlide() {
 
       {/* Bottom: journey bar */}
       <div className={cn(
-        "flex items-center gap-1.5 pt-3 border-t-2 border-border shrink-0 transition-all duration-700 delay-500",
+        "flex items-center gap-1.5 pt-3 border-t border-border shrink-0 transition-all duration-700 delay-500",
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       )}>
         <span className="text-[10px] font-mono text-muted-foreground/60 shrink-0 pr-2">Today&rsquo;s journey</span>
         <ArrowRight className="h-3 w-3 text-muted-foreground/30 shrink-0" />
         {journey.map((step, i) => (
           <div key={i} className="flex items-center gap-1.5 flex-1">
-            <div className="flex items-center gap-2 rounded-lg border-2 border-border bg-card/60 px-2.5 py-1.5 flex-1">
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 flex-1">
               <span className="text-[9px] font-mono text-primary font-bold">{step.num}</span>
               <div className="h-3 w-px bg-border" />
               <div>

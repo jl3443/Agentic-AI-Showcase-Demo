@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { WorkflowDiagram, type WfNode, type WfEdge, type WfZone } from "../workflow-diagram"
 import { Brain, Wrench, Eye, FileText, Cpu, GitBranch, Inbox, Send, Play } from "lucide-react"
@@ -164,16 +164,30 @@ const lvlStyle = {
 export function PatternsSlide() {
   const [active, setActive] = useState(0)
   const [step, setStep] = useState(-1)
+  const [autoRunning, setAutoRunning] = useState(false)
+  const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const p = patterns[active]
 
   const advanceStep = useCallback(() => {
     setStep((prev) => {
-      if (prev >= p.chain.length - 1) return -1
+      if (prev >= p.chain.length - 1) { setAutoRunning(false); return -1 }
       return prev + 1
     })
   }, [p.chain.length])
 
-  const handleSwitch = (i: number) => { setStep(-1); setActive(i) }
+  const startAutoRun = useCallback(() => {
+    setStep(0)
+    setAutoRunning(true)
+  }, [])
+
+  useEffect(() => {
+    if (!autoRunning || step < 0) return
+    if (step >= p.chain.length - 1) { setAutoRunning(false); return }
+    autoRef.current = setTimeout(() => setStep(s => s + 1), 3000)
+    return () => { if (autoRef.current) clearTimeout(autoRef.current) }
+  }, [autoRunning, step, p.chain.length])
+
+  const handleSwitch = (i: number) => { setStep(-1); setActive(i); setAutoRunning(false) }
 
   return (
     <div className="flex h-full flex-col px-5 pt-3 pb-3 md:px-8 md:pt-4">
@@ -244,17 +258,18 @@ export function PatternsSlide() {
         {/* Right: diagram + step controls */}
         <div className="flex flex-1 flex-col gap-2">
           <div className="flex items-center gap-2">
-            <button onClick={advanceStep}
-              className="flex items-center gap-1.5 rounded-lg border-2 border-primary/30 bg-primary/5 px-3 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/10"
+            <button onClick={step === -1 ? startAutoRun : advanceStep}
+              className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/10"
             >
               <Play className="h-3 w-3" />
-              {step === -1 ? "Step Through" : step >= p.chain.length - 1 ? "Reset" : `Next (${step + 1}/${p.chain.length})`}
+              {step === -1 ? "Run" : step >= p.chain.length - 1 ? "Reset" : `Step ${step + 1}/${p.chain.length}`}
             </button>
+            {autoRunning && <span className="text-[9px] text-muted-foreground animate-pulse">Auto-advancing...</span>}
             {step >= 0 && step < p.chain.length && (
-              <span className="rounded bg-[#263238] px-2 py-0.5 text-[9px] text-[#e0e0e0] font-mono">{p.chain[step]}</span>
+              <span className="rounded bg-foreground/5 border border-border px-2 py-0.5 text-[9px] text-foreground font-mono">{p.chain[step]}</span>
             )}
-            {step === -1 && (
-              <span className="text-[9px] text-muted-foreground">Step through the data flow to see sample outputs at each node</span>
+            {step === -1 && !autoRunning && (
+              <span className="text-[9px] text-muted-foreground">Click Run to auto-step through the data flow</span>
             )}
           </div>
 

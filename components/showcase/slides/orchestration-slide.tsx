@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { WorkflowDiagram, type WfNode, type WfEdge } from "../workflow-diagram"
 import { Users, Brain, Cpu, Database, ShieldCheck, Inbox, Send, BarChart3, MessageSquare, Play } from "lucide-react"
@@ -94,15 +94,33 @@ const archData: Record<ArchMode, {
 export function OrchestrationSlide() {
   const [mode, setMode] = useState<ArchMode>("centralized")
   const [step, setStep] = useState(-1)
+  const [autoRunning, setAutoRunning] = useState(false)
+  const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const arch = archData[mode]
 
   const advanceStep = useCallback(() => {
-    setStep((prev) => (prev >= arch.chain.length - 1 ? -1 : prev + 1))
+    setStep((prev) => {
+      if (prev >= arch.chain.length - 1) { setAutoRunning(false); return -1 }
+      return prev + 1
+    })
   }, [arch.chain.length])
+
+  const startAutoRun = useCallback(() => {
+    setStep(0)
+    setAutoRunning(true)
+  }, [])
+
+  useEffect(() => {
+    if (!autoRunning || step < 0) return
+    if (step >= arch.chain.length - 1) { setAutoRunning(false); return }
+    autoRef.current = setTimeout(() => setStep(s => s + 1), 3000)
+    return () => { if (autoRef.current) clearTimeout(autoRef.current) }
+  }, [autoRunning, step, arch.chain.length])
 
   const handleModeSwitch = (m: ArchMode) => {
     setMode(m)
     setStep(-1)
+    setAutoRunning(false)
   }
 
   const activeNodeId = step >= 0 ? arch.chain[step] : null
@@ -147,14 +165,15 @@ export function OrchestrationSlide() {
         <div className="flex-1 flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <button
-              onClick={advanceStep}
-              className="flex items-center gap-1.5 rounded-lg border-2 border-primary/30 bg-primary/5 px-3 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/10"
+              onClick={step === -1 ? startAutoRun : advanceStep}
+              className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/10"
             >
               <Play className="h-3 w-3" />
-              {step === -1 ? "Step Through" : step >= arch.chain.length - 1 ? "Reset" : `Next (${step + 1}/${arch.chain.length})`}
+              {step === -1 ? "Run" : step >= arch.chain.length - 1 ? "Reset" : `Step ${step + 1}/${arch.chain.length}`}
             </button>
+            {autoRunning && <span className="text-[9px] text-muted-foreground animate-pulse">Auto-advancing...</span>}
             {step >= 0 && step < arch.chain.length && (
-              <span className="rounded bg-[#263238] px-2 py-0.5 text-[9px] text-[#e0e0e0] font-mono">{arch.chain[step]}</span>
+              <span className="rounded bg-foreground/5 border border-border px-2 py-0.5 text-[9px] text-foreground font-mono">{arch.chain[step]}</span>
             )}
           </div>
           <div className="flex-1 relative rounded-lg border-2 border-border bg-card/40 overflow-hidden">

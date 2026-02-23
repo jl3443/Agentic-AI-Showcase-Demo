@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { WorkflowDiagram, type WfNode, type WfEdge, type WfZone } from "../workflow-diagram"
 import { FileText, Brain, Cpu, Database, ShieldCheck, Play } from "lucide-react"
@@ -65,14 +65,29 @@ const details: Record<string, { question: string; desc: string; points: string[]
 export function ArchitectureSlide() {
   const [step, setStep] = useState(-1)
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
+  const [autoRunning, setAutoRunning] = useState(false)
+  const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const advanceStep = useCallback(() => {
     setSelectedNode(null)
     setStep((prev) => {
-      if (prev >= archChain.length - 1) return -1
+      if (prev >= archChain.length - 1) { setAutoRunning(false); return -1 }
       return prev + 1
     })
   }, [])
+
+  const startAutoRun = useCallback(() => {
+    setSelectedNode(null)
+    setStep(0)
+    setAutoRunning(true)
+  }, [])
+
+  useEffect(() => {
+    if (!autoRunning || step < 0) return
+    if (step >= archChain.length - 1) { setAutoRunning(false); return }
+    autoRef.current = setTimeout(() => setStep(s => s + 1), 3000)
+    return () => { if (autoRef.current) clearTimeout(autoRef.current) }
+  }, [autoRunning, step])
 
   const currentNodeId = step >= 0 ? archChain[step] : selectedNode
   const detail = currentNodeId && details[currentNodeId] ? details[currentNodeId] : null
@@ -86,12 +101,13 @@ export function ArchitectureSlide() {
             <h2 className="text-lg font-bold text-foreground md:text-xl">Five Core Components</h2>
             <span className="h-px flex-1 bg-border" />
             <button
-              onClick={advanceStep}
-              className="flex items-center gap-1.5 rounded-lg border-2 border-primary/30 bg-primary/5 px-3 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/10 shrink-0"
+              onClick={step === -1 ? startAutoRun : advanceStep}
+              className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/10 shrink-0"
             >
               <Play className="h-3 w-3" />
-              {step === -1 ? "Run Flow" : step >= archChain.length - 1 ? "Reset" : `Next (${step + 1}/${archChain.length})`}
+              {step === -1 ? "Run Flow" : step >= archChain.length - 1 ? "Reset" : `Step ${step + 1}/${archChain.length}`}
             </button>
+            {autoRunning && <span className="text-[9px] text-muted-foreground animate-pulse">Auto-advancing...</span>}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             Every reliable agent—regardless of use case—shares the same anatomy. Missing any one of these, and failure becomes predictable.
@@ -101,7 +117,7 @@ export function ArchitectureSlide() {
 
       <div className="flex flex-1 gap-3 min-h-0">
         {/* Workflow diagram */}
-        <div className="flex-1 relative rounded-lg border-2 border-border bg-[#f4f6fa] overflow-hidden">
+        <div className="flex-1 relative rounded-lg border border-border bg-secondary/30 overflow-hidden">
           <div className="absolute inset-0 dot-grid opacity-30" />
           <WorkflowDiagram
             nodes={archNodes}
@@ -126,7 +142,7 @@ export function ArchitectureSlide() {
         {/* Detail panel */}
         <div className="w-[220px] shrink-0 hidden lg:flex flex-col">
           {detail ? (
-            <div key={currentNodeId} className="flex flex-col gap-2.5 rounded-lg border-2 border-border bg-background p-3.5 slide-enter">
+            <div key={currentNodeId} className="flex flex-col gap-2.5 rounded-lg border border-border bg-background p-3.5 slide-enter">
               <h3 className="text-sm font-bold text-foreground font-mono capitalize">{currentNodeId}</h3>
               <span className="text-[10px] italic text-primary/70">{detail.question}</span>
               <p className="text-[11px] text-muted-foreground leading-relaxed">{detail.desc}</p>
@@ -141,7 +157,7 @@ export function ArchitectureSlide() {
               </ul>
             </div>
           ) : (
-            <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-border p-3.5">
+            <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-border p-3.5">
               <p className="text-center text-[11px] text-muted-foreground leading-relaxed">
                 Click a component node to see its role and implementation details.
               </p>
