@@ -59,7 +59,7 @@ export function CoverSlide() {
         {/* Right column: Demo vs Production contrast */}
         <div className="flex-1 grid grid-cols-2 gap-3">
           {/* Demo Agent */}
-          <div className="rounded-xl border border-red-200 bg-red-50/50 p-4 flex flex-col animate-fade-in-right" style={{ animationDelay: "200ms" }}>
+          <div className="rounded-xl p-4 flex flex-col animate-fade-in-right" style={{ animationDelay: "200ms" }}>
             <div className="flex items-center gap-2 mb-3">
               <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
               <span className="text-xs font-bold text-red-500 font-mono tracking-wide">DEMO AGENT</span>
@@ -79,7 +79,7 @@ export function CoverSlide() {
           </div>
 
           {/* Production System */}
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 flex flex-col animate-fade-in-right" style={{ animationDelay: "350ms" }}>
+          <div className="rounded-xl p-4 flex flex-col animate-fade-in-right" style={{ animationDelay: "350ms" }}>
             <div className="flex items-center gap-2 mb-3">
               <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
               <span className="text-xs font-bold text-emerald-600 font-mono tracking-wide">PRODUCTION SYSTEM</span>

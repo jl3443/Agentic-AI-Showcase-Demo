@@ -8,13 +8,13 @@ import { FileText, Brain, Cpu, Database, ShieldCheck, Play } from "lucide-react"
 const ic = "h-3 w-3"
 
 const archNodes: WfNode[] = [
-  { id: "input", label: "User Intent", x: 6, y: 50, shape: "circle", category: "io", icon: <FileText className={ic} />, sampleOutput: '"Analyze Q1 sales data"' },
-  { id: "planner", label: "Planner", sub: "Task Decomposition", x: 28, y: 30, category: "reasoning", icon: <FileText className={ic} />, sampleOutput: '["fetch_data", "analyze", "report"]' },
-  { id: "reasoner", label: "Reasoner", sub: "Chain-of-Thought", x: 50, y: 30, category: "reasoning", icon: <Brain className={ic} />, sampleOutput: "CoT: step1 -> step2 -> step3" },
-  { id: "memory", label: "Memory", sub: "Vector + KG", x: 28, y: 72, shape: "pill", category: "memory", icon: <Database className={ic} />, sampleOutput: "retrieved 8 relevant docs" },
-  { id: "executor", label: "Executor", sub: "API / Tool Call", x: 72, y: 30, category: "tool", icon: <Cpu className={ic} />, sampleOutput: '{ api: "sales/q1", status: 200 }' },
-  { id: "verifier", label: "Verifier", sub: "Validation Gate", x: 72, y: 72, category: "tool", icon: <ShieldCheck className={ic} />, sampleOutput: "pass: true, confidence: 0.94" },
-  { id: "output", label: "Result", x: 94, y: 50, shape: "circle", category: "io", icon: <FileText className={ic} />, sampleOutput: '"Q1 sales grew 12% YoY"' },
+  { id: "input", label: "User Intent", x: 6, y: 50, shape: "circle", category: "io", icon: <FileText className={ic} />, sampleOutput: "The user request or goal that initiates the agent workflow" },
+  { id: "planner", label: "Planner", sub: "Task Decomposition", x: 28, y: 30, category: "reasoning", icon: <FileText className={ic} />, sampleOutput: "Breaks complex goals into ordered sub-tasks with dependencies and constraints" },
+  { id: "reasoner", label: "Reasoner", sub: "Chain-of-Thought", x: 50, y: 30, category: "reasoning", icon: <Brain className={ic} />, sampleOutput: "LLM-powered reasoning engine using Chain-of-Thought for multi-step decisions" },
+  { id: "memory", label: "Memory", sub: "RAG + CAG", x: 28, y: 72, shape: "pill", category: "memory", icon: <Database className={ic} />, sampleOutput: "RAG retrieves from vector stores; CAG caches frequent context for fast reuse" },
+  { id: "executor", label: "Executor", sub: "API / Tool Call", x: 72, y: 30, category: "tool", icon: <Cpu className={ic} />, sampleOutput: "Calls external APIs, runs code, or invokes tools to carry out planned actions" },
+  { id: "verifier", label: "Verifier", sub: "Validation Gate", x: 72, y: 72, category: "tool", icon: <ShieldCheck className={ic} />, sampleOutput: "Checks outputs against goals, triggers re-planning or human review if needed" },
+  { id: "output", label: "Result", x: 94, y: 50, shape: "circle", category: "io", icon: <FileText className={ic} />, sampleOutput: "The verified final response delivered back to the user" },
 ]
 
 const archEdges: WfEdge[] = [
