@@ -161,7 +161,7 @@ function DecisionCard({ onExecute, onApproval, autoPlay }: { onExecute: () => vo
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     if (autoPlay) {
-      timerRef.current = setTimeout(onExecute, 2000)
+      timerRef.current = setTimeout(onExecute, 3000)
       return () => { if (timerRef.current) clearTimeout(timerRef.current) }
     }
   }, [autoPlay, onExecute])
@@ -198,7 +198,7 @@ function DecisionCard({ onExecute, onApproval, autoPlay }: { onExecute: () => vo
               Send for Approval
             </button>
           </div>
-          {autoPlay && <span className="text-[7px] text-muted-foreground text-center mt-1">Auto-executing in 2s...</span>}
+          {autoPlay && <span className="text-[7px] text-muted-foreground text-center mt-1">Auto-executing in 3s...</span>}
         </div>
       </div>
     </div>
@@ -423,7 +423,7 @@ export function WorkflowSlide() {
       return
     }
     if (step >= maxSteps - 1) { setAutoPlay(false); return }
-    autoRef.current = setTimeout(() => setStep(s => s + 1), 1800)
+    autoRef.current = setTimeout(() => setStep(s => s + 1), 3000)
     return () => { if (autoRef.current) clearTimeout(autoRef.current) }
   }, [autoPlay, step, mode, maxSteps, decisionMade])
 
@@ -437,6 +437,7 @@ export function WorkflowSlide() {
   const handleDecisionApproval = useCallback(() => { setShowDecision(false); setDecisionMade(true); setStep(3) }, [])
 
   const startAutoPlay = () => { setStep(0); setAutoPlay(true); setDecisionMade(false); setShowDecision(false); setSelectedAgent(null); setShowOrchestrator(false) }
+
   const switchMode = (m: "with" | "without") => { setMode(m); setStep(-1); setAutoPlay(false); setDecisionMade(false); setShowDecision(false); setSelectedAgent(null); setShowOrchestrator(false) }
   const switchScenario = (i: number) => { setScenario(i); setStep(-1); setAutoPlay(false); setDecisionMade(false); setShowDecision(false); setSelectedAgent(null); setShowOrchestrator(false) }
 
@@ -497,13 +498,11 @@ export function WorkflowSlide() {
               With Agent
             </button>
           </div>
-          {!autoPlay && (
-            <button onClick={step === -1 ? startAutoPlay : advanceStep}
-              className="flex items-center gap-1 rounded-md border-2 border-primary/40 bg-primary/5 px-2.5 py-0.5 text-[8px] font-bold text-primary hover:bg-primary/10 transition-colors">
-              {step === -1 ? <Play className="h-2.5 w-2.5" /> : <SkipForward className="h-2.5 w-2.5" />}
-              {step === -1 ? "Run Scenario" : isComplete ? "Reset" : `Next (${step + 1}/${maxSteps})`}
-            </button>
-          )}
+          <button onClick={step === -1 ? startAutoPlay : advanceStep}
+            className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-0.5 text-[8px] font-bold text-primary hover:bg-primary/10 transition-colors">
+            {step === -1 ? <Play className="h-2.5 w-2.5" /> : <SkipForward className="h-2.5 w-2.5" />}
+            {step === -1 ? "Run" : isComplete ? "Reset" : `Step ${step + 1}/${maxSteps}`}
+          </button>
         </div>
       </div>
 

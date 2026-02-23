@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import {
   Shield, Play, Eye, FileCheck, GitBranch, Power,
@@ -95,8 +95,43 @@ const capStageMap = new Map(capabilities.map(c => [c.id, c.stageId]))
 export function GovernanceSlide() {
   const [mode, setMode] = useState<"learning" | "system">("learning")
   const [activeCap, setActiveCap] = useState<string | null>(null)
+  const [autoRunning, setAutoRunning] = useState(false)
+  const [autoStep, setAutoStep] = useState(-1)
+  const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cap = activeCap ? capabilities.find(c => c.id === activeCap) : null
   const highlightStage = cap ? capStageMap.get(cap.id) : null
+
+  const startAutoRun = useCallback(() => {
+    setAutoStep(0)
+    setActiveCap(capabilities[0].id)
+    setAutoRunning(true)
+  }, [])
+
+  const advanceStep = useCallback(() => {
+    setAutoStep(prev => {
+      if (prev >= capabilities.length - 1) {
+        setAutoRunning(false)
+        setActiveCap(null)
+        return -1
+      }
+      const next = prev + 1
+      setActiveCap(capabilities[next].id)
+      return next
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!autoRunning || autoStep < 0) return
+    if (autoStep >= capabilities.length - 1) { setAutoRunning(false); return }
+    autoRef.current = setTimeout(() => {
+      setAutoStep(prev => {
+        const next = prev + 1
+        setActiveCap(capabilities[next].id)
+        return next
+      })
+    }, 3000)
+    return () => { if (autoRef.current) clearTimeout(autoRef.current) }
+  }, [autoRunning, autoStep])
 
   return (
     <div className="flex h-full flex-col px-5 pt-3 pb-3 md:px-8 md:pt-4">
@@ -107,8 +142,17 @@ export function GovernanceSlide() {
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-bold text-foreground md:text-xl leading-tight">Control, Observe, Improve</h2>
             <span className="h-px flex-1 bg-border" />
+            {/* Run button */}
+            <button
+              onClick={autoStep === -1 ? startAutoRun : advanceStep}
+              className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/10 shrink-0"
+            >
+              <Play className="h-3 w-3" />
+              {autoStep === -1 ? "Run" : autoStep >= capabilities.length - 1 ? "Reset" : `Step ${autoStep + 1}/${capabilities.length}`}
+            </button>
+            {autoRunning && <span className="text-[9px] text-muted-foreground animate-pulse">Auto-advancing...</span>}
             {/* Toggle */}
-            <div className="flex rounded-lg border-2 border-border overflow-hidden shrink-0">
+            <div className="flex rounded-lg overflow-hidden shrink-0">
               <button onClick={() => setMode("learning")}
                 className={cn("px-2.5 py-1 text-[9px] font-medium transition-colors", mode === "learning" ? "bg-primary text-primary-foreground" : "bg-card/40 text-muted-foreground hover:bg-secondary/50")}>
                 Learning Mode
@@ -126,17 +170,17 @@ export function GovernanceSlide() {
       </div>
 
       {/* ── Lifecycle flow ── */}
-      <div className="relative mb-2 rounded-lg border-2 border-border bg-card/30 px-3 py-2">
+      <div className="relative mb-2 rounded-lg bg-secondary/30 px-3 py-2">
         <div className="flex items-center justify-center gap-1">
           {stages.map((s, i) => {
             const isHl = highlightStage === s.id
             return (
               <div key={s.id} className="flex items-center gap-1">
                 <div className={cn(
-                  "flex items-center gap-1.5 rounded-lg border-2 px-2 py-1.5 transition-all duration-400 max-w-[170px]",
+                  "flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition-all duration-400 max-w-[170px]",
                   isHl
-                    ? "border-primary bg-primary/10 shadow-[0_0_12px_rgba(var(--primary-rgb,34,139,34),0.15)]"
-                    : "border-border bg-card/50"
+                    ? "bg-primary/10"
+                    : "bg-card/50"
                 )}>
                   <span className={cn("shrink-0 transition-colors", isHl ? "text-primary" : "text-muted-foreground")}>{s.icon}</span>
                   <div className="min-w-0">
@@ -171,10 +215,10 @@ export function GovernanceSlide() {
               key={c.id}
               onClick={() => setActiveCap(activeCap === c.id ? null : c.id)}
               className={cn(
-                "flex items-center gap-1.5 rounded-lg border-2 px-2 py-1 text-left transition-all",
+                "flex items-center gap-1.5 rounded-lg px-2 py-1 text-left transition-all",
                 activeCap === c.id
-                  ? "border-primary/50 bg-primary/10"
-                  : "border-border bg-card/40 hover:bg-secondary/50"
+                  ? "bg-primary/10"
+                  : "bg-card/40 hover:bg-secondary/50"
               )}
             >
               <span className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded text-[7px] font-bold font-mono",
@@ -187,7 +231,7 @@ export function GovernanceSlide() {
         </div>
 
         {/* Right: Detail panel */}
-        <div className="flex-1 rounded-lg border-2 border-border bg-card/30 overflow-hidden">
+        <div className="flex-1 rounded-lg bg-secondary/20 overflow-hidden">
           {cap ? (
             <div className="h-full flex flex-col p-3 overflow-y-auto animate-in fade-in slide-in-from-right-2 duration-300" key={cap.id}>
               {/* Header */}
@@ -249,7 +293,7 @@ export function GovernanceSlide() {
       </div>
 
       {/* ── Bottom message ── */}
-      <div className="mt-1.5 flex items-center justify-center gap-4 rounded-lg border-2 border-primary/20 bg-primary/5 py-2 px-4">
+      <div className="mt-1.5 flex items-center justify-center gap-4 rounded-lg bg-primary/5 py-2 px-4">
         <span className="text-xs text-foreground/60 font-medium">Autonomy without governance is a demo.</span>
         <span className="h-4 w-px bg-primary/20" />
         <span className="text-xs text-primary font-bold">Autonomy with governance is an enterprise system.</span>

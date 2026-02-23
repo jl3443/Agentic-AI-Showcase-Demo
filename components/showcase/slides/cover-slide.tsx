@@ -1,22 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { XCircle, CheckCircle2, ArrowRight } from "lucide-react"
-
-const failurePoints = [
-  "Forgets context between turns",
-  "Ships wrong answers without validation",
-  "Can't scale to multi-agent pipelines",
-  "Behavior changes silently with model updates",
-]
-
-const systemCapabilities = [
-  "Persistent memory (short-term + long-term)",
-  "Verifier gates every output before delivery",
-  "Orchestrated, governed multi-agent systems",
-  "Versioned, auditable, rollback-ready behavior",
-]
+import { ArrowRight } from "lucide-react"
 
 const journey = [
   { num: "01", label: "Architecture", sub: "5 Core Components" },
@@ -26,112 +11,45 @@ const journey = [
 ]
 
 export function CoverSlide() {
-  const [visible, setVisible] = useState(false)
-  useEffect(() => { setVisible(true) }, [])
-
   return (
-    <div className="flex h-full flex-col p-8 md:p-10 lg:p-12 gap-4">
+    <div className="flex h-full flex-col p-8 md:p-10 lg:p-12 gap-6">
 
       {/* Top tag */}
-      <div className={cn("flex items-center gap-2 shrink-0 transition-all duration-500", visible ? "opacity-100" : "opacity-0")}>
-        <span className="rounded-md border-2 border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-mono font-bold text-primary tracking-wide">
+      <div className="flex items-center gap-2 shrink-0 animate-fade-in">
+        <span className="rounded-md border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-mono font-bold text-primary tracking-wide">
           KNOWLEDGE SHOWCASE
         </span>
         <span className="h-px flex-1 bg-border" />
-        <span className="text-[10px] font-mono text-muted-foreground">2026</span>
       </div>
 
-      {/* Main: left headline + right contrast */}
-      <div className="flex flex-1 gap-6 lg:gap-10 min-h-0">
-
-        {/* Left column: headline */}
-        <div className={cn(
-          "flex flex-col justify-center gap-5 w-[38%] shrink-0 transition-all duration-700 delay-100",
-          visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-        )}>
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight text-foreground lg:text-5xl xl:text-6xl leading-[1.1]">
-              Agentic<br />AI
-            </h1>
-            <p className="mt-3 text-sm font-medium text-muted-foreground leading-relaxed md:text-base">
-              Most agents work in a notebook.
-              <br />
-              <span className="text-foreground font-semibold">Few survive production.</span>
-            </p>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-3">
+      {/* Main: centered headline */}
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 min-h-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+        <div className="text-center max-w-2xl">
+          <h1 className="text-5xl font-bold tracking-tight text-foreground lg:text-6xl xl:text-7xl leading-[1.08]">
+            Agentic AI
+          </h1>
+          <p className="mt-4 text-base font-medium text-muted-foreground leading-relaxed md:text-lg">
+            Most agents work in a notebook.{" "}
+            <span className="text-foreground font-semibold">Few survive production.</span>
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
             A systematic look at the architecture, patterns, and governance that turn an AI demo into a reliable enterprise system.
           </p>
-        </div>
-
-        {/* Right column: Demo vs Production contrast */}
-        <div className={cn(
-          "flex-1 grid grid-cols-2 gap-3 transition-all duration-700 delay-200",
-          visible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
-        )}>
-          {/* Demo Agent */}
-          <div className="rounded-xl border-2 border-red-200 bg-red-50/50 p-4 flex flex-col">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
-              <span className="text-xs font-bold text-red-500 font-mono tracking-wide">DEMO AGENT</span>
-            </div>
-            <ul className="flex flex-col gap-2.5 flex-1">
-              {failurePoints.map((p, i) => (
-                <li
-                  key={i}
-                  className={cn(
-                    "flex items-start gap-2 text-xs text-red-700/70 transition-all duration-500",
-                    visible ? "opacity-100" : "opacity-0"
-                  )}
-                  style={{ transitionDelay: `${200 + i * 80}ms` }}
-                >
-                  <XCircle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-red-400" />
-                  {p}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Production System */}
-          <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4 flex flex-col">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-              <span className="text-xs font-bold text-emerald-600 font-mono tracking-wide">PRODUCTION SYSTEM</span>
-            </div>
-            <ul className="flex flex-col gap-2.5 flex-1">
-              {systemCapabilities.map((s, i) => (
-                <li
-                  key={i}
-                  className={cn(
-                    "flex items-start gap-2 text-xs text-emerald-700/70 transition-all duration-500",
-                    visible ? "opacity-100" : "opacity-0"
-                  )}
-                  style={{ transitionDelay: `${400 + i * 80}ms` }}
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-emerald-500" />
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
       </div>
 
       {/* Bottom: journey bar */}
-      <div className={cn(
-        "flex items-center gap-1.5 pt-3 border-t-2 border-border shrink-0 transition-all duration-700 delay-500",
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-      )}>
+      <div className="flex items-center gap-1.5 pt-3 border-t border-border shrink-0 animate-fade-in-up" style={{ animationDelay: "500ms" }}>
         <span className="text-[10px] font-mono text-muted-foreground/60 shrink-0 pr-2">Today&rsquo;s journey</span>
         <ArrowRight className="h-3 w-3 text-muted-foreground/30 shrink-0" />
-        {journey.map((step, i) => (
+        {journey.map((j, i) => (
           <div key={i} className="flex items-center gap-1.5 flex-1">
-            <div className="flex items-center gap-2 rounded-lg border-2 border-border bg-card/60 px-2.5 py-1.5 flex-1">
-              <span className="text-[9px] font-mono text-primary font-bold">{step.num}</span>
+            <div className={cn("flex items-center gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 flex-1 animate-fade-in")} style={{ animationDelay: `${550 + i * 60}ms` }}>
+              <span className="text-[9px] font-mono text-primary font-bold">{j.num}</span>
               <div className="h-3 w-px bg-border" />
               <div>
-                <div className="text-[10px] font-semibold text-foreground leading-tight">{step.label}</div>
-                <div className="text-[8px] text-muted-foreground leading-tight">{step.sub}</div>
+                <div className="text-[10px] font-semibold text-foreground leading-tight">{j.label}</div>
+                <div className="text-[8px] text-muted-foreground leading-tight">{j.sub}</div>
               </div>
             </div>
             {i < journey.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground/30 shrink-0" />}

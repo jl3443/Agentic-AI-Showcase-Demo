@@ -1,131 +1,115 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { WorkflowDiagram, type WfNode, type WfEdge } from "../workflow-diagram"
 import {
-  Network, RefreshCw, Lightbulb, Inbox, Send, GitBranch,
-  Shield, Brain, FileText,
+  Boxes, GitFork, Network, ShieldCheck, MonitorSmartphone,
+  ArrowRight, Workflow, CheckCircle2,
 } from "lucide-react"
 
-const ic = "h-3 w-3"
-
-/* Research evolution workflow */
-const researchNodes: WfNode[] = [
-  { id: "in", label: "Current", sub: "Demo Stage", x: 5, y: 50, shape: "circle", color: "#5bb98c", icon: <Inbox className={ic} /> },
-  { id: "protocol", label: "MCP / A2A", sub: "Protocol Collab", x: 25, y: 30, color: "#6ba3d6", icon: <Network className={ic} /> },
-  { id: "self", label: "Self-Improve", sub: "Anti-Drift", x: 25, y: 70, color: "#d4915c", icon: <RefreshCw className={ic} /> },
-  { id: "causal", label: "Causal AI", sub: "World Model", x: 50, y: 50, color: "#8b7ec8", icon: <Lightbulb className={ic} /> },
-  { id: "verify", label: "Verifiable", sub: "Explainable", x: 72, y: 50, color: "#c8983c", icon: <Shield className={ic} /> },
-  { id: "out", label: "Enterprise", sub: "Production", x: 95, y: 50, shape: "circle", color: "#e06060", icon: <Send className={ic} /> },
+const sections = [
+  {
+    num: "01",
+    icon: Boxes,
+    title: "Five Core Components",
+    summary: "Every production agent needs a Planner, Reasoner, Executor, Memory (RAG/CAG), and Verifier. Missing any one creates predictable failure modes.",
+    keyPoints: ["Planner decomposes goals into sub-tasks", "Memory combines RAG retrieval with CAG caching", "Verifier gates every output before delivery"],
+  },
+  {
+    num: "02",
+    icon: GitFork,
+    title: "Collaboration Patterns",
+    summary: "Four patterns cover the complexity spectrum: ReAct for simple lookups, Tool Use for parallel execution, Planning for multi-step tasks, and Reflection for quality-critical work.",
+    keyPoints: ["ReAct: Reason + Act loop for single-tool chains", "Planning: decompose, execute, re-plan", "Reflection: self-critique improves output quality"],
+  },
+  {
+    num: "03",
+    icon: Network,
+    title: "Multi-Agent Orchestration",
+    summary: "Supervisors coordinate specialized agents through hierarchical delegation patterns, enabling complex workflows while maintaining governance boundaries.",
+    keyPoints: ["Supervisor routes tasks to specialist agents", "Hierarchical delegation with fallback paths", "Shared context via message-passing protocols"],
+  },
+  {
+    num: "04",
+    icon: ShieldCheck,
+    title: "Governance & Control",
+    summary: "Production governance follows a continuous loop: Define Policy, Execute within boundaries, Observe decisions, Audit behavior, and Improve through versioned redeployment.",
+    keyPoints: ["Permission control and escalation rules", "Decision observability and audit trails", "Versioned, rollback-ready deployments"],
+  },
+  {
+    num: "05",
+    icon: Workflow,
+    title: "AI-Powered Workflows",
+    summary: "Industrial AI systems combine defect detection, root-cause analysis, and corrective action to prevent quality failures before they reach production.",
+    keyPoints: ["Real-time anomaly detection at the edge", "Automated root-cause analysis pipelines", "Continuous feedback loop for model improvement"],
+  },
+  {
+    num: "06",
+    icon: MonitorSmartphone,
+    title: "UI Agents",
+    summary: "Browser and UI agents automate screen-level interactions through perception, grounding, and action pipelines -- a transitional capability bridging toward API-first architectures.",
+    keyPoints: ["Screen perception via vision models", "DOM grounding for precise element targeting", "Transitional bridge to native API integrations"],
+  },
 ]
-const researchEdges: WfEdge[] = [
-  { from: "in", to: "protocol", animated: true, route: "h-first" },
-  { from: "in", to: "self", animated: true, route: "h-first" },
-  { from: "protocol", to: "causal", animated: true, route: "h-first" },
-  { from: "self", to: "causal", animated: true, route: "h-first" },
-  { from: "causal", to: "verify", animated: true },
-  { from: "verify", to: "out", animated: true },
-]
 
-const directions = [
-  {
-    icon: <Network className="h-4 w-4" />,
-    tag: "MCP / A2A",
-    label: "Protocol-based Collaboration",
-    color: "#6ba3d6",
-    desc: "How MCP/A2A standards reduce coupling and strengthen governance in multi-agent and multi-tool scenarios.",
-    keywords: ["MCP", "A2A Protocol", "Interoperability"],
-  },
-  {
-    icon: <RefreshCw className="h-4 w-4" />,
-    tag: "Anti-Drift",
-    label: "Controlled Self-Improvement",
-    color: "#d4915c",
-    desc: "Preventing drift, metric gaming, and feedback contamination in the eval-feedback-update loop.",
-    keywords: ["Drift Detection", "Metric Gaming", "Safe Learning"],
-  },
-  {
-    icon: <Lightbulb className="h-4 w-4" />,
-    tag: "Causal AI",
-    label: "Causal & World Models",
-    color: "#8b7ec8",
-    desc: "Upgrading from \"can do\" to \"knows why\" -- enhancing verifiable decision-making in high-risk scenarios.",
-    keywords: ["Causal Inference", "World Model", "Explainability"],
-  },
+const takeaways = [
+  "Architecture before code -- design the 5 components first, then implement",
+  "Choose patterns by task complexity, not by trend",
+  "Governance is not optional -- it is what separates demos from production",
+  "Memory (RAG + CAG) is the most underinvested component in most agent systems",
 ]
 
 export function ResearchSlide() {
-  const [visible, setVisible] = useState(false)
-  const [nodeHighlight, setNodeHighlight] = useState<string | null>(null)
-
-  useEffect(() => { setVisible(true) }, [])
-
-  useEffect(() => {
-    const ids = researchNodes.map((n) => n.id)
-    let step = 0
-    const timer = setInterval(() => {
-      step = (step + 1) % ids.length
-      setNodeHighlight(ids[step])
-    }, 1800)
-    return () => clearInterval(timer)
-  }, [])
-
   return (
     <div className="flex h-full flex-col px-5 pt-4 pb-3 md:px-8 md:pt-5">
       {/* Title */}
-      <div className="mb-2 flex items-center gap-3">
+      <div className="mb-3 flex items-center gap-3">
         <span className="font-mono text-[10px] tracking-widest text-primary">08</span>
-        <h2 className="text-lg font-bold text-foreground md:text-xl">{"Next Research Directions"}</h2>
+        <h2 className="text-lg font-bold text-foreground md:text-xl">Executive Summary</h2>
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      {/* Evolution workflow */}
-      <div className="relative h-[30%] shrink-0 rounded-lg border-2 border-border bg-card/40 overflow-hidden mb-2">
-        <div className="absolute inset-0 dot-grid opacity-20" />
-        <WorkflowDiagram
-          nodes={researchNodes}
-          edges={researchEdges}
-          activeNodeId={nodeHighlight}
-          onNodeClick={(id) => setNodeHighlight(id)}
-        />
+      <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+        From demo to production: a systematic framework covering architecture, patterns, orchestration, and governance for enterprise-grade agentic AI systems.
+      </p>
+
+      {/* Section summary grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 flex-1 min-h-0 mb-3">
+        {sections.map((s, i) => {
+          const Icon = s.icon
+          return (
+            <div key={i} className="flex flex-col gap-2 rounded-lg bg-secondary/30 p-3 overflow-hidden">
+              <div className="flex items-center gap-2">
+                <Icon className="h-4 w-4 text-primary shrink-0" />
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[9px] font-mono text-primary font-bold">{s.num}</span>
+                  <h3 className="text-xs font-semibold text-foreground truncate">{s.title}</h3>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed flex-1">{s.summary}</p>
+              <ul className="flex flex-col gap-1">
+                {s.keyPoints.map((p, j) => (
+                  <li key={j} className="flex items-start gap-1.5 text-[9px] text-foreground/60 leading-relaxed">
+                    <ArrowRight className="h-2.5 w-2.5 mt-0.5 shrink-0 text-primary/40" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        })}
       </div>
 
-      {/* Direction cards */}
-      <div className="flex flex-1 gap-2.5 min-h-0">
-        {directions.map((dir, i) => (
-          <div
-            key={i}
-            className={cn(
-              "group flex flex-1 flex-col gap-2.5 rounded-lg border-2 border-border bg-card/40 p-3.5 transition-all duration-500 hover:border-primary/30",
-              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-            )}
-            style={{ transitionDelay: `${i * 120}ms` }}
-          >
-            <div className="flex items-center justify-between">
-              <span style={{ color: dir.color }}>{dir.icon}</span>
-              <span className="rounded px-1.5 py-0.5 text-[9px] font-mono font-medium" style={{ backgroundColor: `${dir.color}15`, color: dir.color }}>{dir.tag}</span>
+      {/* Key takeaways */}
+      <div className="rounded-lg bg-primary/5 p-3">
+        <h3 className="text-[10px] font-mono font-bold text-primary tracking-widest mb-2">KEY TAKEAWAYS</h3>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+          {takeaways.map((t, i) => (
+            <div key={i} className="flex items-start gap-2 text-[11px] text-foreground/80 leading-relaxed">
+              <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
+              {t}
             </div>
-            <h3 className="text-sm font-semibold text-foreground">{dir.label}</h3>
-            <p className="flex-1 text-[11px] text-muted-foreground leading-relaxed">{dir.desc}</p>
-            <div className="flex flex-wrap gap-1">
-              {dir.keywords.map((kw, j) => (
-                <span key={j} className="rounded bg-secondary px-1.5 py-0.5 text-[9px] text-muted-foreground">{kw}</span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Conclusion */}
-      <div className={cn(
-        "mt-2 rounded-lg border-2 border-primary/30 bg-primary/5 p-2.5 text-center transition-all duration-700",
-        visible ? "opacity-100" : "opacity-0"
-      )} style={{ transitionDelay: "400ms" }}>
-        <p className="text-[11px] text-foreground/80">
-          <span className="font-semibold text-primary">Conclusion: </span>
-          {"Current learning outcomes provide both theoretical and engineering foundations for going from Agent Demo to enterprise-grade controlled delivery."}
-        </p>
+          ))}
+        </div>
       </div>
     </div>
   )
