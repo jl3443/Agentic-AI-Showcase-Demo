@@ -82,6 +82,12 @@ export function ArchitectureSlide() {
     setAutoRunning(true)
   }, [])
 
+  // Auto-start animation on mount
+  useEffect(() => {
+    const t = setTimeout(() => { setSelectedNode(null); setStep(0); setAutoRunning(true) }, 400)
+    return () => clearTimeout(t)
+  }, [])
+
   useEffect(() => {
     if (!autoRunning || step < 0) return
     if (step >= archChain.length - 1) { setAutoRunning(false); return }

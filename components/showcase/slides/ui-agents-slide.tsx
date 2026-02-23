@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { WorkflowDiagram, type WfNode, type WfEdge } from "../workflow-diagram"
 import {
   Eye, MousePointerClick, LayoutDashboard, Shield, FileText,
-  Activity, LogOut, Inbox, Send, GitBranch,
+  Activity, LogOut, Inbox, Send, GitBranch, Play,
 } from "lucide-react"
 
 const ic = "h-3 w-3"
@@ -53,23 +53,67 @@ const priorityStyle: Record<string, string> = {
 export function UIAgentsSlide() {
   const [nodeHighlight, setNodeHighlight] = useState<string | null>(null)
   const [visibleCount, setVisibleCount] = useState(0)
+  const [step, setStep] = useState(-1)
+  const [autoRunning, setAutoRunning] = useState(false)
+  const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
-    const timers = disciplines.map((_, i) =>
-      setTimeout(() => setVisibleCount(i + 1), 80 + i * 60)
-    )
-    return () => timers.forEach(clearTimeout)
+  /*
+    Animation steps:
+    0 - show workflow diagram + start node cycling
+    1..7 - reveal each discipline card one by one
+    Total: 8 steps
+  */
+  const TOTAL_STEPS = 1 + disciplines.length
+
+  const startAutoRun = useCallback(() => {
+    setStep(0)
+    setVisibleCount(0)
+    setAutoRunning(true)
   }, [])
 
+  // Auto-start animation on mount
   useEffect(() => {
+    const t = setTimeout(() => { setStep(0); setVisibleCount(0); setAutoRunning(true) }, 400)
+    return () => clearTimeout(t)
+  }, [])
+
+  const advanceStep = useCallback(() => {
+    setStep(prev => {
+      if (prev >= TOTAL_STEPS - 1) {
+        setAutoRunning(false)
+        return -1
+      }
+      return prev + 1
+    })
+  }, [TOTAL_STEPS])
+
+  useEffect(() => {
+    if (!autoRunning || step < 0) return
+    if (step >= TOTAL_STEPS - 1) { setAutoRunning(false); return }
+    autoRef.current = setTimeout(() => setStep(s => s + 1), 3000)
+    return () => { if (autoRef.current) clearTimeout(autoRef.current) }
+  }, [autoRunning, step, TOTAL_STEPS])
+
+  // Reveal discipline cards as steps advance
+  useEffect(() => {
+    if (step <= 0) {
+      if (step === -1) setVisibleCount(0)
+      return
+    }
+    setVisibleCount(step) // step 1 => 1 visible, step 7 => 7 visible
+  }, [step])
+
+  // Node highlight cycling when diagram is shown
+  useEffect(() => {
+    if (step < 0) { setNodeHighlight(null); return }
     const ids = uiNodes.map((n) => n.id)
-    let step = 0
+    let s = 0
     const timer = setInterval(() => {
-      step = (step + 1) % ids.length
-      setNodeHighlight(ids[step])
+      s = (s + 1) % ids.length
+      setNodeHighlight(ids[s])
     }, 1800)
     return () => clearInterval(timer)
-  }, [])
+  }, [step])
 
   return (
     <div className="flex h-full flex-col px-5 pt-4 pb-3 md:px-8 md:pt-5">
@@ -78,11 +122,22 @@ export function UIAgentsSlide() {
         <span className="font-mono text-[10px] tracking-widest text-primary">07</span>
         <h2 className="text-lg font-bold text-foreground md:text-xl">{"UI Agents Engineering Disciplines"}</h2>
         <span className="h-px flex-1 bg-border" />
-        <span className="rounded-md border-2 border-[#d4915c30] bg-[#d4915c10] px-2 py-0.5 text-[9px] font-bold font-mono text-[#d4915c]">Transitional capability, not end-state</span>
+        <button
+          onClick={step === -1 ? startAutoRun : advanceStep}
+          className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/10 shrink-0"
+        >
+          <Play className="h-3 w-3" />
+          {step === -1 ? "Run" : step >= TOTAL_STEPS - 1 ? "Reset" : `Step ${step + 1}/${TOTAL_STEPS}`}
+        </button>
+        {autoRunning && <span className="text-[9px] text-muted-foreground animate-pulse">Auto-advancing...</span>}
+        <span className="rounded-md border border-[#d4915c30] bg-[#d4915c10] px-2 py-0.5 text-[9px] font-bold font-mono text-[#d4915c]">Transitional capability, not end-state</span>
       </div>
 
       {/* Top: workflow */}
-      <div className="relative h-[38%] shrink-0 rounded-lg border-2 border-border bg-card/40 overflow-hidden mb-2">
+      <div className={cn(
+        "relative h-[38%] shrink-0 rounded-lg border border-border bg-card/40 overflow-hidden mb-2 transition-all duration-700",
+        step >= 0 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      )}>
         <div className="absolute inset-0 dot-grid opacity-20" />
         <WorkflowDiagram
           nodes={uiNodes}
@@ -98,7 +153,7 @@ export function UIAgentsSlide() {
           <div
             key={i}
             className={cn(
-              "flex flex-col gap-1 rounded-lg border-2 border-border bg-card/40 p-2.5 transition-all duration-300",
+              "flex flex-col gap-1 rounded-lg border border-border bg-card/40 p-2.5 transition-all duration-500",
               i < visibleCount ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
             )}
           >
