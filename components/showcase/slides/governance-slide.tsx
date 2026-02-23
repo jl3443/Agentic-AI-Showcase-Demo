@@ -107,16 +107,6 @@ export function GovernanceSlide() {
     setAutoRunning(true)
   }, [])
 
-  // Auto-start animation on mount
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setAutoStep(0)
-      setActiveCap(capabilities[0].id)
-      setAutoRunning(true)
-    }, 400)
-    return () => clearTimeout(t)
-  }, [])
-
   const advanceStep = useCallback(() => {
     setAutoStep(prev => {
       if (prev >= capabilities.length - 1) {

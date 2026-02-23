@@ -438,13 +438,6 @@ export function WorkflowSlide() {
 
   const startAutoPlay = () => { setStep(0); setAutoPlay(true); setDecisionMade(false); setShowDecision(false); setSelectedAgent(null); setShowOrchestrator(false) }
 
-  // Auto-start animation on mount
-  useEffect(() => {
-    const t = setTimeout(() => { setStep(0); setAutoPlay(true); setDecisionMade(false); setShowDecision(false); setSelectedAgent(null); setShowOrchestrator(false) }, 400)
-    return () => clearTimeout(t)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const switchMode = (m: "with" | "without") => { setMode(m); setStep(-1); setAutoPlay(false); setDecisionMade(false); setShowDecision(false); setSelectedAgent(null); setShowOrchestrator(false) }
   const switchScenario = (i: number) => { setScenario(i); setStep(-1); setAutoPlay(false); setDecisionMade(false); setShowDecision(false); setSelectedAgent(null); setShowOrchestrator(false) }
 

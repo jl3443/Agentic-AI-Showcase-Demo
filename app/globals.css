@@ -162,3 +162,31 @@ html, body {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Cover slide entrance animations */
+.animate-fade-in {
+  opacity: 0;
+  animation: coverFadeIn 0.5s ease-out forwards;
+}
+@keyframes coverFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in-up {
+  opacity: 0;
+  animation: coverFadeInUp 0.5s ease-out forwards;
+}
+@keyframes coverFadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-right {
+  opacity: 0;
+  animation: coverFadeInRight 0.5s ease-out forwards;
+}
+@keyframes coverFadeInRight {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}

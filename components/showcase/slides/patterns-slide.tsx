@@ -180,12 +180,6 @@ export function PatternsSlide() {
     setAutoRunning(true)
   }, [])
 
-  // Auto-start animation on mount
-  useEffect(() => {
-    const t = setTimeout(() => { setStep(0); setAutoRunning(true) }, 400)
-    return () => clearTimeout(t)
-  }, [])
-
   useEffect(() => {
     if (!autoRunning || step < 0) return
     if (step >= p.chain.length - 1) { setAutoRunning(false); return }

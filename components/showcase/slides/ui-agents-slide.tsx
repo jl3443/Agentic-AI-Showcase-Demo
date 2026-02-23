@@ -71,12 +71,6 @@ export function UIAgentsSlide() {
     setAutoRunning(true)
   }, [])
 
-  // Auto-start animation on mount
-  useEffect(() => {
-    const t = setTimeout(() => { setStep(0); setVisibleCount(0); setAutoRunning(true) }, 400)
-    return () => clearTimeout(t)
-  }, [])
-
   const advanceStep = useCallback(() => {
     setStep(prev => {
       if (prev >= TOTAL_STEPS - 1) {
