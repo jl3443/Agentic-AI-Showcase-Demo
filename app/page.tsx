@@ -20,7 +20,7 @@ const titles = [
   "How AI Prevents Scrap",
   "Live AI Production Supervisor",
   "UI Agents",
-  "Research Directions",
+  "Executive Summary",
 ]
 
 export default function ShowcasePage() {

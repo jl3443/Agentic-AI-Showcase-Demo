@@ -15,7 +15,7 @@ import {
   Workflow,
   Play,
   MonitorSmartphone,
-  FlaskConical,
+  ClipboardList,
   Settings,
 } from "lucide-react"
 
@@ -28,7 +28,7 @@ const navIcons = [
   Workflow,
   Play,
   MonitorSmartphone,
-  FlaskConical,
+  ClipboardList,
 ]
 
 const navDescriptions = [
@@ -40,7 +40,7 @@ const navDescriptions = [
   "How AI prevents scrap",
   "Live AI supervisor",
   "Browser & UI agents",
-  "Future directions",
+  "Key takeaways",
 ]
 
 interface SlideDeckProps {
