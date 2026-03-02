@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date as _date
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
@@ -11,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.audit import ActorType, AuditLog
-from app.models.invoice import Invoice, InvoiceStatus
+from app.models.invoice import Invoice, InvoiceLineItem, InvoiceStatus
 from app.models.user import User
 from app.schemas.invoice import (
     InvoiceCreate,
@@ -20,7 +21,7 @@ from app.schemas.invoice import (
     InvoiceUpdate,
 )
 from app.services import audit_service, invoice_service, match_service
-from app.services.ocr_service import mock_extract_invoice
+from app.services.ocr_service import extract_invoice, mock_extract_invoice
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
@@ -112,19 +113,74 @@ def update_invoice(
 
 
 @router.post("/{invoice_id}/extract")
-def extract_invoice(
+def extract_invoice_endpoint(
     invoice_id: uuid.UUID,
+    file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Trigger mock OCR extraction for an invoice."""
+    """Extract data from an invoice using AI Vision or fallback to mock.
+
+    Runs as a sync handler so that the blocking Claude API call is executed
+    in FastAPI's thread pool instead of blocking the async event loop.
+    """
     invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
-    result = mock_extract_invoice(invoice.file_storage_path)
+    if file:
+        file_content = file.file.read()
+        result = extract_invoice(file_content, filename=file.filename or "invoice.pdf")
+    else:
+        result = mock_extract_invoice(invoice.file_storage_path)
 
+    # Update invoice fields from extraction
+    extracted = result.get("extracted_data", {})
     invoice.ocr_confidence_score = result["confidence"]
+    if extracted.get("invoice_number"):
+        invoice.invoice_number = extracted["invoice_number"]
+    if extracted.get("invoice_date"):
+        try:
+            invoice.invoice_date = _date.fromisoformat(extracted["invoice_date"])
+        except ValueError:
+            pass
+    if extracted.get("due_date"):
+        try:
+            invoice.due_date = _date.fromisoformat(extracted["due_date"])
+        except ValueError:
+            pass
+    if extracted.get("total_amount"):
+        invoice.total_amount = extracted["total_amount"]
+    if extracted.get("tax_amount") is not None:
+        invoice.tax_amount = extracted["tax_amount"]
+    if extracted.get("freight_amount") is not None:
+        invoice.freight_amount = extracted["freight_amount"]
+    if extracted.get("discount_amount") is not None:
+        invoice.discount_amount = extracted["discount_amount"]
+    if extracted.get("currency"):
+        invoice.currency = extracted["currency"]
+
+    # Persist extracted line items (replace existing ones)
+    extracted_lines = extracted.get("line_items", [])
+    if extracted_lines:
+        # Remove old line items
+        db.query(InvoiceLineItem).filter(
+            InvoiceLineItem.invoice_id == invoice.id
+        ).delete()
+        # Add new ones
+        for li in extracted_lines:
+            db.add(InvoiceLineItem(
+                invoice_id=invoice.id,
+                line_number=li.get("line_number", 1),
+                description=li.get("description"),
+                quantity=li.get("quantity", 1),
+                unit_price=li.get("unit_price", 0),
+                line_total=li.get("line_total", 0),
+                tax_amount=li.get("tax_amount", 0),
+                ai_gl_prediction=li.get("ai_gl_prediction"),
+                ai_confidence=li.get("ai_confidence"),
+            ))
+
     invoice.status = InvoiceStatus.extracted
     db.commit()
 

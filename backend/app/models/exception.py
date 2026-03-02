@@ -90,6 +90,10 @@ class Exception_(TimestampMixin, Base):
         UUID(as_uuid=True), nullable=True
     )
 
+    # AI-powered analysis fields
+    ai_suggested_resolution: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_severity_reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     # relationships
     invoice = relationship("Invoice", back_populates="exceptions")
     assigned_user = relationship("User", back_populates="assigned_exceptions", foreign_keys=[assigned_to])

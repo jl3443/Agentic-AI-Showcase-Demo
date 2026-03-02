@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
+    ai_chat,
     analytics,
     approvals,
     auth,
@@ -23,3 +24,4 @@ api_router.include_router(approvals.router)
 api_router.include_router(import_data.router)
 api_router.include_router(analytics.router)
 api_router.include_router(vendors.router)
+api_router.include_router(ai_chat.router)

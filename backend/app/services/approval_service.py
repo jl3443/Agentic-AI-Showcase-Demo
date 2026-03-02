@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -14,8 +15,126 @@ from app.models.approval import (
     ApprovalStatus,
     ApprovalTask,
 )
+from app.models.exception import Exception_
 from app.models.invoice import Invoice, InvoiceStatus
+from app.models.matching import MatchResult
 from app.models.user import User, UserRole
+from app.models.vendor import Vendor
+from app.services.ai_service import ai_service
+
+logger = logging.getLogger(__name__)
+
+APPROVAL_SYSTEM_PROMPT = """\
+You are a senior accounts-payable approval analyst. Given the invoice context \
+below, analyse risk and recommend an approval action.
+
+Return ONLY a JSON object (no markdown, no explanation):
+{
+  "recommendation": "approve" | "review" | "reject",
+  "reasoning": "1-3 sentence explanation",
+  "risk_factors": ["list", "of", "risk", "factors"]
+}
+
+Guidelines:
+- "approve" if the invoice looks routine, amounts match, vendor history is clean.
+- "review" if there are minor discrepancies, high amounts, or limited history.
+- "reject" if there are significant red flags (large variance, vendor on hold, \
+duplicate indicators)."""
+
+
+def _build_approval_context(db: Session, invoice: Invoice) -> str:
+    """Build a context string for Claude to analyse an invoice."""
+    # Match results
+    match = (
+        db.query(MatchResult)
+        .filter(MatchResult.invoice_id == invoice.id)
+        .order_by(MatchResult.created_at.desc())
+        .first()
+    )
+    match_info = "No match performed yet."
+    if match:
+        match_info = (
+            f"Match status: {match.match_status.value}, "
+            f"Score: {match.overall_score:.1f}%, "
+            f"Details: {match.details}"
+        )
+
+    # Exception count
+    exc_count = (
+        db.query(Exception_)
+        .filter(Exception_.invoice_id == invoice.id)
+        .count()
+    )
+
+    # Vendor history
+    vendor_total = (
+        db.query(Invoice)
+        .filter(Invoice.vendor_id == invoice.vendor_id)
+        .count()
+    )
+    vendor_exceptions = (
+        db.query(Exception_)
+        .join(Invoice, Exception_.invoice_id == Invoice.id)
+        .filter(Invoice.vendor_id == invoice.vendor_id)
+        .count()
+    )
+    exc_rate = (vendor_exceptions / vendor_total * 100) if vendor_total > 0 else 0
+
+    # Resolve vendor name
+    vendor = db.query(Vendor).filter(Vendor.id == invoice.vendor_id).first()
+    vendor_label = f"{vendor.name} ({vendor.vendor_code})" if vendor else str(invoice.vendor_id)
+
+    return (
+        f"Invoice: {invoice.invoice_number}\n"
+        f"Amount: {invoice.currency} {invoice.total_amount:,.2f}\n"
+        f"Vendor: {vendor_label}\n"
+        f"Invoice date: {invoice.invoice_date}\n"
+        f"Due date: {invoice.due_date}\n"
+        f"Line items: {len(invoice.line_items)}\n"
+        f"Match result: {match_info}\n"
+        f"Exceptions on this invoice: {exc_count}\n"
+        f"Vendor history: {vendor_total} invoices, "
+        f"{vendor_exceptions} exceptions ({exc_rate:.1f}% exception rate)"
+    )
+
+
+def _get_ai_recommendation(
+    db: Session, invoice: Invoice
+) -> tuple[AIRecommendation, str]:
+    """Get AI-powered approval recommendation, with rule-based fallback."""
+    if not ai_service.available:
+        # Fallback: simple amount-based rule
+        if float(invoice.total_amount) < 5000:
+            return AIRecommendation.approve, "Auto-recommendation based on invoice amount (<$5,000)"
+        return AIRecommendation.review, "Auto-recommendation: amount exceeds $5,000 threshold"
+
+    context = _build_approval_context(db, invoice)
+    raw = ai_service.call_claude(
+        system_prompt=APPROVAL_SYSTEM_PROMPT,
+        user_message=context,
+        max_tokens=512,
+    )
+
+    parsed = ai_service.extract_json(raw) if raw else None
+    if parsed:
+        rec_str = parsed.get("recommendation", "review").lower()
+        reasoning = parsed.get("reasoning", "")
+        risk_factors = parsed.get("risk_factors", [])
+        if risk_factors:
+            reasoning += " Risk factors: " + ", ".join(risk_factors) + "."
+
+        rec_map = {
+            "approve": AIRecommendation.approve,
+            "reject": AIRecommendation.reject,
+            "review": AIRecommendation.review,
+        }
+        return rec_map.get(rec_str, AIRecommendation.review), reasoning
+
+    # Fallback if AI response unparseable
+    logger.warning("AI recommendation unparseable – using rule-based fallback")
+    if float(invoice.total_amount) < 5000:
+        return AIRecommendation.approve, "Auto-recommendation based on invoice amount (<$5,000)"
+    return AIRecommendation.review, "Auto-recommendation: amount exceeds $5,000 threshold"
 
 
 def create_approval_tasks(db: Session, invoice_id: uuid.UUID) -> List[ApprovalTask]:
@@ -26,6 +145,9 @@ def create_approval_tasks(db: Session, invoice_id: uuid.UUID) -> List[ApprovalTa
     invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
     if not invoice:
         raise ValueError(f"Invoice {invoice_id} not found")
+
+    # Get AI recommendation once for all tasks
+    ai_rec, ai_reason = _get_ai_recommendation(db, invoice)
 
     # Fetch active matrix rules ordered by priority
     matrix_rules = (
@@ -61,10 +183,8 @@ def create_approval_tasks(db: Session, invoice_id: uuid.UUID) -> List[ApprovalTa
                 approval_level=rule.approver_level,
                 approval_order=rule.priority,
                 status=ApprovalStatus.pending,
-                ai_recommendation=AIRecommendation.approve
-                if float(invoice.total_amount) < 5000
-                else AIRecommendation.review,
-                ai_recommendation_reason="Auto-recommendation based on invoice amount",
+                ai_recommendation=ai_rec,
+                ai_recommendation_reason=ai_reason,
             )
             db.add(task)
             tasks_created.append(task)
@@ -82,8 +202,8 @@ def create_approval_tasks(db: Session, invoice_id: uuid.UUID) -> List[ApprovalTa
                 approval_level=1,
                 approval_order=1,
                 status=ApprovalStatus.pending,
-                ai_recommendation=AIRecommendation.approve,
-                ai_recommendation_reason="Default single-level approval",
+                ai_recommendation=ai_rec,
+                ai_recommendation_reason=ai_reason,
             )
             db.add(task)
             tasks_created.append(task)

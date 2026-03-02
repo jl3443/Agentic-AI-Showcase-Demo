@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # ── LLM / AI ────────────────────────────────────────────────────────
     LLM_API_KEY: str = ""
-    LLM_MODEL: str = "claude-sonnet-4-20250514"
+    LLM_MODEL: str = "claude-haiku-4-5-20251001"
 
     # ── OCR ──────────────────────────────────────────────────────────────
     OCR_ENDPOINT: str = "http://localhost:8080/ocr"

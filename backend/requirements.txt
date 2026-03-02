@@ -15,3 +15,4 @@ httpx==0.28.1
 python-dotenv==1.0.1
 pandas==2.2.3
 openpyxl==3.1.5
+anthropic>=0.52.0

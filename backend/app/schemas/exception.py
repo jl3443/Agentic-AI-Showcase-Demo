@@ -51,6 +51,8 @@ class ExceptionResponse(BaseModel):
     resolution_notes: Optional[str] = None
     resolved_at: Optional[datetime] = None
     resolved_by: Optional[uuid.UUID] = None
+    ai_suggested_resolution: Optional[str] = None
+    ai_severity_reasoning: Optional[str] = None
     comments: List[ExceptionCommentResponse] = []
     created_at: datetime
     updated_at: datetime
